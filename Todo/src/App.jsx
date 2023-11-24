@@ -1,27 +1,36 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 
 import TaskCreate from "./components/TaskCreate"
 import TaskList from "./components/TaskList"
+import axios from "axios"
 
 function App() {
 
   // setTasks ile eski taskı update ediyorum. yani eklenen tüm değerler tasks da
   const [tasks, setTasks] = useState([])
   
-  function createTask(title,task_description) {
+  async function createTask(title,task_description) {
+    
+    const response = await axios.post("http://localhost:3004/tasks",{
+      title:title,
+      task_description:task_description,
+    })
+
     // eski taskları alıp ayrı olarak obj olarak yeni task oluştuğunda bunu create ediyorum. .push()methodu yerine kullanıldı.
     const createdTask =[
-      ...tasks,{
-        id: Math.round(Math.random()*9999999),
-        title:title,
-        task_description:task_description,
-      }
+      ...tasks,response.data
     ]
     setTasks(createdTask)// yeni tasklarım bunlar olduğunu gösteriyorum.
   
   }
-  function deletebyTaskId(id) {
+  async function fetchTask() {
+    const response = axios.get("http://localhost:3004/tasks")
+    setTasks(response.data)
+  }
+  
+  async function deletebyTaskId(id) {
+    await axios.delete(`http://localhost:3004/tasks/${id}`)
     const afterDeleteTask = tasks.filter((task)=>{
       if (task.id !== id){
         return task;
@@ -29,7 +38,11 @@ function App() {
     })
     setTasks(afterDeleteTask)
   }
-  function editTaskById(id,updatedTitle,updatedTaskDesc) {
+  async function editTaskById(id,updatedTitle,updatedTaskDesc) {
+    await axios.put(`http://localhost:3004/tasks/${id}`,{
+      title:updatedTitle,
+      task_description:updatedTaskDesc
+    })
     const updatedTask = tasks.map((task)=>{
       if (task.id == id){
         return {id:id,title:updatedTitle,task_description:updatedTaskDesc};
